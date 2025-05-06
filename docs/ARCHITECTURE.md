@@ -115,3 +115,153 @@ sequenceDiagram
    - Query caching
    - Optimized algorithms
    - Resource pooling
+
+
+
+
+   # System Architecture
+
+## Overview
+
+This document outlines the technical architecture and system design of BookHaven.
+
+## System Components
+
+```mermaid
+graph TB
+    Client[Web Browser]
+    WebServer[PHP Web Server]
+    Database[(MySQL Database)]
+    FileSystem[File System]
+    Cache[Cache Layer]
+    
+    Client -->|HTTP/HTTPS| WebServer
+    WebServer -->|SQL| Database
+    WebServer -->|Read/Write| FileSystem
+    WebServer -->|Cache Operations| Cache
+    Cache -->|Cache Miss| Database
+```
+
+## User Flow Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> BrowseCatalog
+    BrowseCatalog --> ViewBook
+    ViewBook --> AddToCart
+    AddToCart --> ViewCart
+    ViewCart --> Checkout
+    Checkout --> Login: If not logged in
+    Login --> EnterShipping
+    EnterShipping --> EnterPayment
+    EnterPayment --> PlaceOrder
+    PlaceOrder --> OrderConfirmation
+    OrderConfirmation --> [*]
+```
+
+## Component Interaction
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant D as Database
+    
+    U->>F: Browse Books
+    F->>B: GET /api/books
+    B->>D: Query Books
+    D-->>B: Return Results
+    B-->>F: JSON Response
+    F-->>U: Display Books
+```
+
+## Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph Production
+        LB[Load Balancer]
+        WS1[Web Server 1]
+        WS2[Web Server 2]
+        DB[(Primary DB)]
+        DBS[(Replica DB)]
+        FS[File Storage]
+        
+        LB --> WS1
+        LB --> WS2
+        WS1 --> DB
+        WS2 --> DB
+        DB --> DBS
+        WS1 --> FS
+        WS2 --> FS
+    end
+```
+
+## Cart System Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> EmptyCart
+    EmptyCart --> CartWithItems: Add Item
+    CartWithItems --> CartWithItems: Update Quantity
+    CartWithItems --> EmptyCart: Remove All Items
+    CartWithItems --> Checkout: Proceed to Checkout
+    Checkout --> OrderPlaced: Payment Success
+    Checkout --> CartWithItems: Payment Failed
+    OrderPlaced --> [*]
+```
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant D as Database
+    
+    U->>F: Enter Credentials
+    F->>B: POST /api/login
+    B->>D: Verify Credentials
+    D-->>B: User Data
+    B->>B: Generate Session
+    B-->>F: Session Token
+    F-->>U: Redirect to Dashboard
+```
+
+## Order Processing
+
+```mermaid
+graph TD
+    A[Order Placed] -->|Validate| B{Stock Check}
+    B -->|In Stock| C[Process Payment]
+    B -->|Out of Stock| D[Notify User]
+    C -->|Success| E[Create Order]
+    C -->|Failure| F[Payment Failed]
+    E --> G[Update Inventory]
+    E --> H[Send Confirmation]
+    H --> I[Order Complete]
+```
+
+## Admin Dashboard Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Dashboard
+    Dashboard --> OrderManagement
+    Dashboard --> BookManagement
+    Dashboard --> UserManagement
+    Dashboard --> Reports
+    
+    OrderManagement --> ViewOrder
+    OrderManagement --> UpdateStatus
+    
+    BookManagement --> AddBook
+    BookManagement --> EditBook
+    BookManagement --> ManageInventory
+    
+    Reports --> SalesReport
+    Reports --> InventoryReport
+    Reports --> UserReport
+```
